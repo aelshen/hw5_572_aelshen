@@ -1,8 +1,7 @@
 '''
 #==============================================================================
-cky.py
-/Users/aelshen/Documents/Dropbox/School/CLMS 2013-2014/Winter 2014/Ling 571-Deep Processing Techniques for NLP/hw2_571_aelshen/src/cky.py
-Created on Jan 29, 2014
+chi_square.py
+Created on Feb 5, 2014
 @author: aelshen
 #==============================================================================
 '''
@@ -15,19 +14,24 @@ from collections import defaultdict, Counter
 #--------------------------------Constants-------------------------------------
 #==============================================================================
 DEBUG = True
+COMMENTCHAR = '#'
 ROWS = 2
+chi_square_table = {1:{.10: 2.706, .05: 3.841, .025: 5.024, .01: 6.635, .001: 10.828},
+                    2:{.10: 4.605, .05: 5.991, .025: 7.378, .01: 9.210, .001: 13.816},
+                    3:{.10: 6.251, .05: 7.815, .025: 9.348, .01: 11.345, .001: 16.266},
+                    4:{.10: 7.779, .05: 9.488, .025: 11.143, .01: 13.277, .001: 18.467},
+                    5:{.10: 9.236, .05: 11.070, .025: 12.833, .01: 15.086, .001: 20.515},
+                    6:{.10: 10.645, .05: 12.592, .025: 14.449, .01: 16.812, .001: 22.458},
+                    7:{.10: 12.017, .05: 14.067, .025: 16.013, .01: 18.475, .001: 20.278},
+                    8:{.10: 13.362, .05: 15.507, .025: 17.535, .01: 20.090, .001: 21.955},
+                    9:{.10: 14.684, .05: 16.919, .025: 19.023, .01: 21.666, .001: 23.589},
+                    10:{.10: 15.987, .05: 18.307, .025: 20.483, .01: 23.209, .001: 25.188}}
 #==============================================================================
 #-----------------------------------Main---------------------------------------
 #==============================================================================
 def main():
-    if len(sys.argv) < 3:
-        min_prob = 0.05
-    else:
-        min_prob = float(sys.argv[2])
-        
-    hw5 = ChiSquare(min_prob)
+    hw5 = ChiSquare()
     hw5.PrintFeatureList()
-    hw5.FilterFeatures()
 
 #==============================================================================    
 #---------------------------------Functions------------------------------------
@@ -51,18 +55,23 @@ def main():
 ##
 ##-------------------------------------------------------------------------
 class ChiSquare:
-    def __init__(self, min_prob):
+    def __init__(self, min_prob = .05, input = None):
         self.classes = defaultdict(int)
         self.instance_count = 0
         self.features = defaultdict(float)
         self.filtered_features = set()
         self.features_by_class = defaultdict(lambda: defaultdict(int))
-        self.instances = []        
+        self.instances = []     
+        self.min_prob = min_prob  
         
+        if input == None:
+            input = sys.stdin
+        else:
+            input = open(input, 'r')
         
-        self.ExtractFeatures()
+        self.ExtractFeatures(input)
         self.degree_of_freedom = (ROWS - 1) * (len(self.classes) - 1)
-        self.max_chi_score = self.GetMaxChiScore(min_prob)
+        self.max_chi_score = self.GetMaxChiScore()
         self.CalculateChiScores()
 
     ##-------------------------------------------------------------------------
@@ -76,20 +85,30 @@ class ChiSquare:
     ##
     ##    Returns:            returns
     ##-------------------------------------------------------------------------
-    def FilterFeatures(self):
-        filtered_vector_file = open("filtered.vectors.txt", 'w')
+    def FilterFeaturesFromFile(self, file):
+        filtered_file_name = file.split("/")[-1]
+        filtered_file_name = filtered_file_name.split(".")[:-1]
+        filtered_file_name.extend(["filtered_" + str(self.min_prob)])
+
+        filtered_vector_file = open(".".join(filtered_file_name), 'w')
         
         for feat in self.features:
             if self.features[feat] <= self.max_chi_score:
                 self.filtered_features.add(feat)
-        filtered_vector_file.write("Number of related features: " + str(len(self.filtered_features)) + os.linesep)
+        print("Chi score threshold: " + str(self.max_chi_score))
+        print("Number of related features: " + str(len(self.filtered_features)) + os.linesep)
         
-        for i in self.instances:
-            filtered_vector_file.write(i.label + " ")
-            for j in i.features:
-                feat = j[0]
+        
+        for line in open(file, 'r').readlines():
+            if not line.strip():
+                continue
+            line = line.split()
+            label = line[0]
+            filtered_vector_file.write(label + " ")
+            for j in line[1:]:
+                feat = j.split(":")[0]
                 if feat in self.filtered_features:
-                    filtered_vector_file.write(":".join(j) + " ")
+                    filtered_vector_file.write(j + " ")
             
             filtered_vector_file.write(os.linesep)
         
@@ -106,10 +125,9 @@ class ChiSquare:
     ##
     ##    Returns:            returns
     ##-------------------------------------------------------------------------
-    def ExtractFeatures(self):
+    def ExtractFeatures(self, input):
         instance_count = 0
-        #for vector in fileinput.input():
-        for line in open(sys.argv[1], 'r').readlines():
+        for line in input:
             feature_vector = []
             
             self.instance_count += 1
@@ -218,8 +236,8 @@ class ChiSquare:
     ##
     ##    Returns:            returns
     ##-------------------------------------------------------------------------
-    def GetMaxChiScore(self, prob):
-        return 9.488
+    def GetMaxChiScore(self):
+        return chi_square_table[self.degree_of_freedom][self.min_prob]
     
 
     ##-------------------------------------------------------------------------

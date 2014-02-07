@@ -4,3 +4,13 @@
 .pydevproject
 
 src/train.vectors.txt
+
+hw5.docx
+
+*.pyc
+
+src/test.vectors.filtered_0.05
+
+src/test.vectors.txt
+
+src/train.vectors.filtered_0.05
