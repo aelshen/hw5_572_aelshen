@@ -44,14 +44,29 @@ def main():
 ##-------------------------------------------------------------------------
 ## Class ChiSquare
 ##-------------------------------------------------------------------------
-##    Description:        desciription
+##    Description:        Run a Chi_2 test to see goodness of fit of features
 ##
-##    Arguments:         arguments
+##    Arguments:          min_prob; the minimum probability needed to debunk 
+##                                 the NULL hypothesis
 ##
+##                        input; source of input for the class (stdin or a filename)
 ##
-##    Properties:         properties
-##
-##    Calls:                  calls
+##    Properties:        self.classes; a dictionary of all the classes 
+##                                     mapped to their frequency in the data
+##                        self.instance_count; number of instances in data
+##                        self.features; a dict of features mapped to their
+##                                       chi_square score
+##                        self.filtered_features; a list of all features 
+##                                        that have a score <= the max chi score
+##                        self.feature_by_class; double dict of all the classes 
+##                                               and all the features found in 
+##                                               that class and their counts
+##                        self.instances; list of all instance objects found
+##                        self.min_prob; minimum prob needed to debunk NULL
+##                                       hypothesis for a feature.
+##                        self.degree_of_freedom; degree of freedom needed 
+##                                                to calculate Chi score
+##                        self.max_chi_score; maximum allowed chi score
 ##
 ##-------------------------------------------------------------------------
 class ChiSquare:
@@ -77,13 +92,12 @@ class ChiSquare:
     ##-------------------------------------------------------------------------
     ## FilterFeatures()
     ##-------------------------------------------------------------------------
-    ##    Description:        description
+    ##    Description:    Run through all the chi square scores for all features,
+    ##                    removing any features with a score unable to debunk
+    ##                    the NULL hypothesis
     ##
-    ##    Arguments:        arguments
+    ##    Arguments:        file; the file from which features are to be filtered
     ##
-    ##    Calls:                calls
-    ##
-    ##    Returns:            returns
     ##-------------------------------------------------------------------------
     def FilterFeaturesFromFile(self, file):
         filtered_file_name = file.split("/")[-1]
@@ -102,7 +116,7 @@ class ChiSquare:
         for line in open(file, 'r').readlines():
             if not line.strip():
                 continue
-            line = line.split()
+            line = line.strip().split()
             label = line[0]
             filtered_vector_file.write(label + " ")
             for j in line[1:]:
@@ -117,13 +131,11 @@ class ChiSquare:
     ##-------------------------------------------------------------------------
     ## ExtractFeatures()
     ##-------------------------------------------------------------------------
-    ##    Description:        description
+    ##    Description:           Extract all feature and class information 
+    ##                           from the training file
     ##
-    ##    Arguments:        arguments
+    ##    Arguments:             input; stdin or a file to read training data   
     ##
-    ##    Calls:                calls
-    ##
-    ##    Returns:            returns
     ##-------------------------------------------------------------------------
     def ExtractFeatures(self, input):
         instance_count = 0
@@ -148,13 +160,10 @@ class ChiSquare:
     ##-------------------------------------------------------------------------
     ## CalculateChiScores()
     ##-------------------------------------------------------------------------
-    ##    Description:        description
+    ##    Description:        Calculate the chi score for a feature
     ##
-    ##    Arguments:        arguments
+    ##    Calls:              self.CreateTables()
     ##
-    ##    Calls:                calls
-    ##
-    ##    Returns:            returns
     ##-------------------------------------------------------------------------
     def CalculateChiScores(self):
         for feature in self.features:
@@ -173,13 +182,15 @@ class ChiSquare:
     ##-------------------------------------------------------------------------
     ## CalculateTables()
     ##-------------------------------------------------------------------------
-    ##    Description:        description
+    ##    Description:        Create the observation and expected tables to 
+    ##                        be used for calculating the chi score for a feat
     ##
-    ##    Arguments:        arguments
+    ##    Arguments:        feature; the feature for which score is being found
     ##
-    ##    Calls:                calls
-    ##
-    ##    Returns:            returns
+    ##    Returns:            contingency_table; the table of observed feature
+    ##                                            occurrences in data
+    ##                        expected_table; table of expected feature 
+    ##                                        occurrences in data
     ##-------------------------------------------------------------------------
     def CreateTables(self, feature):
         contingency_table = [[0.0 for x in range(len(self.classes) + 1)] for x in range(ROWS + 1)]
@@ -228,13 +239,9 @@ class ChiSquare:
     ##-------------------------------------------------------------------------
     ## GetMaxChiScore()
     ##-------------------------------------------------------------------------
-    ##    Description:        description
+    ##    Description:        calculate the maximum chi score as threshold
     ##
-    ##    Arguments:        arguments
-    ##
-    ##    Calls:                calls
-    ##
-    ##    Returns:            returns
+    ##    Returns:            the chi square score for a given min prob
     ##-------------------------------------------------------------------------
     def GetMaxChiScore(self):
         return chi_square_table[self.degree_of_freedom][self.min_prob]
@@ -243,13 +250,9 @@ class ChiSquare:
     ##-------------------------------------------------------------------------
     ## PrintFeatureList()
     ##-------------------------------------------------------------------------
-    ##    Description:        description
+    ##    Description:      print out all the features in the following format:
+    ##                      feature chi-square-score doc-count
     ##
-    ##    Arguments:        arguments
-    ##
-    ##    Calls:                calls
-    ##
-    ##    Returns:            returns
     ##-------------------------------------------------------------------------
     def PrintFeatureList(self):
         for feat in sorted(self.features, key=self.features.get, reverse=True):
@@ -264,14 +267,15 @@ class ChiSquare:
 ##-------------------------------------------------------------------------
 ## Class Instance
 ##-------------------------------------------------------------------------
-##    Description:        desciription
+##    Description:    a class to contain information for instances found
+##                    in a vector file
 ##
-##    Arguments:         arguments
+##    Arguments:      label; class label
+##                    feature; dicto of features and document count
 ##
 ##
-##    Properties:         properties
-##
-##    Calls:                  calls
+##    Properties:    self.label; class label
+##                    self.features; dict of features and counts
 ##
 ##-------------------------------------------------------------------------
 class Instance:
