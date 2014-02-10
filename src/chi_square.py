@@ -222,17 +222,7 @@ class ChiSquare:
                                        * contingency_table[ROWS][l]\
                                        / self.instance_count
         
-        
-#         for j in range(2):
-#             for k in range( len(classes) ):
-#                 contingency_table[j][len(self.classes)] += contingency_table[j][k]
-#                 contingency_table[2][k] += contingency_table[j][k]
-#                 expected_table[j][len(self.classes)] += expected_table[j][k]
-#                 expected_table[2][k] += expected_table[j][k]
-                
-        
-        
-        
+      
         return contingency_table, expected_table
 
 
